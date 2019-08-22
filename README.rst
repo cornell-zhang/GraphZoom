@@ -27,6 +27,7 @@ Usage
 
 **Example Usage**
     ``cd graphzoom``
+
     ``python graphzoom.py --mcr_dir YOUR_MCR_ROOT_DIR --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk``
 
 **--mcr_dir**:  *root directory of matlab compiler runtime*
