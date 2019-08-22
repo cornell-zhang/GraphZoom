@@ -23,9 +23,11 @@ Installation
 Usage
 -----
 
+**Note:** You have to pass the root directory of matlab compiler runtime to the argument "--mcr_dir" when running graphsage.py
+
 **Example Usage**
     ``cd graphzoom``
-    ``python graphzoom.py --mcr_dir /opt/matlab/R2018A/ --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk``
+    ``python graphzoom.py --mcr_dir YOUR_MCR_ROOT_DIR --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk``
 
 **--mcr_dir**:  *root directory of matlab compiler runtime*
 
