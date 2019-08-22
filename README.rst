@@ -6,7 +6,7 @@ GraphZoom is a framework that aims to improve both performance and scalability o
 
 Requirements
 ------------
-* Matlab Compiler Runtime (MCR) 2018a, which is required by graph reduction algorithm
+* Matlab Compiler Runtime (MCR) 2018a(Linux), which is required by graph reduction algorithm
 * numpy
 * networkx
 * scipy
