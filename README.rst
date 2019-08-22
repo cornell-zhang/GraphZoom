@@ -23,7 +23,7 @@ Installation
 Usage
 -----
 
-**Note:** You have to pass the root directory of matlab compiler runtime to the argument "--mcr_dir" when running graphsage.py
+**Note:** You have to pass the root directory of matlab compiler runtime to the argument "--mcr_dir" when running graphzoom.py
 
 **Example Usage**
     ``cd graphzoom``
