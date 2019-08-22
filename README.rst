@@ -6,7 +6,7 @@ GraphZoom is a framework that aims to improve both performance and scalability o
 
 Requirements
 ------------
-* Matlab Compiler Runtime (MCR) 2018a(Linux), which is a standalone set of shared libraries that enables the execution of compiled MATLAB applications and does not require license to install
+* Matlab Compiler Runtime (MCR) 2018a(Linux), which is a standalone set of shared libraries that enables the execution of compiled MATLAB applications and does not require license to install.
 * numpy
 * networkx
 * scipy
