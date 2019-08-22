@@ -6,12 +6,18 @@ GraphZoom is a framework that aims to improve both performance and scalability o
 
 Requirements
 ------------
-* Matlab Compiler Runtime (MCR) 2018a
+* Matlab Compiler Runtime (MCR) 2018a, which is required by graph reduction algorithm
+* numpy
+* networkx
 * scipy
+* scikit-learn
+* gensim, only required by deepwalk, node2vec
+* theano, only required by netmf
+* tensorflow, only required by graphsage
 
 Installation
 ------------
-1. `install matlab compiler runtime 2018a` #### [MCR Installation Website](https://www.mathworks.com/products/compiler/matlab-runtime.html)
+1. `install matlab compiler runtime 2018a` (https://www.mathworks.com/products/compiler/matlab-runtime.html)
 2. `pip install -r requirements.txt`
 
 Usage
