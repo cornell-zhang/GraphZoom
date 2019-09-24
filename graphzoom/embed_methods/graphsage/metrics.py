@@ -1,9 +1,5 @@
 import tensorflow as tf
 
-# DISCLAIMER:
-# Parts of this code file were originally forked from
-# https://github.com/tkipf/gcn
-# which itself was very inspired by the keras package
 def masked_logit_cross_entropy(preds, labels, mask):
     """Logit cross-entropy loss with masking."""
     loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=preds, labels=labels)

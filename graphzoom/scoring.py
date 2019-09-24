@@ -5,21 +5,16 @@ import numpy as np
 from networkx.readwrite import json_graph
 
 def run_regression(train_embeds, train_labels, test_embeds, test_labels):
-    from sklearn.linear_model import SGDClassifier
-    from sklearn.dummy import DummyClassifier
-    from sklearn.metrics import f1_score
     from sklearn.linear_model import LogisticRegression
-    dummy = DummyClassifier()
-    dummy.fit(train_embeds, train_labels)
     log = LogisticRegression(solver='liblinear', multi_class='ovr')
     log.fit(train_embeds, train_labels)
-    print("Test scores")
-    print("Micro F1 score: {}".format(f1_score(test_labels, log.predict(test_embeds), average="micro")))
-    print("Train scores")
-    print("Micro F1 score: {}".format(f1_score(train_labels, log.predict(train_embeds), average="micro")))
-    print("Random baseline")
-    print("Micro F1 score: {}".format(f1_score(test_labels, dummy.predict(test_embeds), average="micro")))
-
+    predict = (log.predict(test_embeds)).tolist()
+    acc = 0
+    for i, truth in enumerate(test_labels):
+        if test_labels[i] == predict[i]:
+            acc += 1
+    accuracy = float(acc)/len(test_labels)
+    print("Test Accuracy: ", accuracy)
 
 def lr(dataset_dir, data_dir, dataset):
     print("%%%%%% Starting Evaluation %%%%%%")

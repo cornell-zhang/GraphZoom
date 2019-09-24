@@ -19,10 +19,6 @@ class ModelSetting:
         self.neg_sample_size = 20
 
 FLAGS = ModelSetting()
-# DISCLAIMER:
-# Boilerplate parts of this code file were originally forked from
-# https://github.com/tkipf/gcn
-# which itself was very inspired by the keras package
 
 class Model(object):
     def __init__(self, **kwargs):

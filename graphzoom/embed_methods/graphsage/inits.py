@@ -1,11 +1,6 @@
 import tensorflow as tf
 import numpy as np
 
-# DISCLAIMER:
-# Parts of this code file are derived from
-# https://github.com/tkipf/gcn
-# which is under an identical MIT license as GraphSAGE
-
 def uniform(shape, scale=0.05, name=None):
     """Uniform init."""
     initial = tf.random_uniform(shape, minval=-scale, maxval=scale, dtype=tf.float32)

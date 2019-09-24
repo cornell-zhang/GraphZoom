@@ -13,7 +13,6 @@ import os.path
 
 from embed_methods.deepwalk.deepwalk import *
 from embed_methods.node2vec.node2vec import *
-from embed_methods.netmf.netmf import *
 from utils import *
 from scoring import lr
 
@@ -89,7 +88,7 @@ def feats2graph(feature, num_neighs, mapping):
 
 
 def graph_fusion(laplacian, feature, num_neighs, mcr_dir, fusion_input_path, search_ratio, fusion_output_dir, mapping_path, dataset):
-    os.system('./run_LamgSetup.sh {} {} {} f {}'.format(mcr_dir, fusion_input_path, search_ratio, fusion_output_dir))
+    os.system('./run_coarsening.sh {} {} {} f {}'.format(mcr_dir, fusion_input_path, search_ratio, fusion_output_dir))
     mapping = mtx2matrix(mapping_path)
     feats_laplacian = feats2graph(feature, num_neighs, mapping)
     fused_laplacian = laplacian + feats_laplacian
@@ -114,11 +113,12 @@ def smooth_filter(laplacian_matrix, lda):
     norm_adj = degree @ adj_matrix @ degree
     return norm_adj
     
-def refinement(levels, projections, coarse_laplacian, embeddings, lda):
+def refinement(levels, projections, coarse_laplacian, embeddings, lda, power):
     for i in reversed(range(levels)):
         embeddings = (projections[i].transpose()) @ embeddings
         filter_ = smooth_filter(coarse_laplacian[i], lda)
-        embeddings = filter_ @ (filter_ @ embeddings)
+        if power or i == 0:
+            embeddings = filter_ @ (filter_ @ embeddings)
     return embeddings
 
 def main():
@@ -128,10 +128,11 @@ def main():
     parser.add_argument("-s", "--search_ratio", type=int, default=12, help="control the search space in graph fusion process")
     parser.add_argument("-r", "--reduce_ratio", type=int, default=2, help="control graph coarsening levels")
     parser.add_argument("-n", "--num_neighs", type=int, default=2, help="control k-nearest neighbors in graph fusion process")
-    parser.add_argument("-l", "--lda", type=float, default=0.05, help="control self loop in adjacency matrix")
+    parser.add_argument("-l", "--lda", type=float, default=0.1, help="control self loop in adjacency matrix")
     parser.add_argument("-e", "--embed_path", type=str, default="embed_results/embeddings.npy", help="path of embedding result")
-    parser.add_argument("-m", "--embed_method", type=str, default="deepwalk", help="specific embedding method")
+    parser.add_argument("-m", "--embed_method", type=str, default="deepwalk", help="[deepwalk, node2vec, graphsage]")
     parser.add_argument("-f", "--fusion", default=True, action="store_false", help="whether use graph fusion")
+    parser.add_argument("-p", "--power", default=False, action="store_true", help="Strong power of graph filter, set True to enhance filter power")
 
     parser.add_argument("-g", "--sage_model", type=str, default="mean", help="aggregation function in graphsage")
     parser.add_argument("-w", "--sage_weighted", default=True, action="store_false", help="whether consider weighted reduced graph")
@@ -183,7 +184,7 @@ def main():
 
 ######Graph Reduction######
     print("%%%%%% Starting Graph Reduction %%%%%%")
-    os.system('./run_LamgSetup.sh {} {} {} n {}'.format(mcr_dir, input_path, ratio, output_dir))
+    os.system('./run_coarsening.sh {} {} {} n {}'.format(mcr_dir, input_path, ratio, output_dir))
     reduce_time = read_time(cputime_path)
 
 
@@ -199,11 +200,6 @@ def main():
     elif args.embed_method == "node2vec":
         embed_start = time.process_time()
         embeddings = node2vec(G)
-        embed_end = time.process_time()
-
-    elif args.embed_method == "netmf":
-        embed_start = time.process_time()
-        embeddings = netmf(G)
         embed_end = time.process_time()
 
     elif args.embed_method == "graphsage":
@@ -226,7 +222,7 @@ def main():
 ######Refinement######
     print("%%%%%% Starting Graph Refinement %%%%%%")
     refine_start = time.process_time()
-    embeddings = refinement(levels, projections, coarse_laplacian, embeddings, lda)
+    embeddings = refinement(levels, projections, coarse_laplacian, embeddings, lda, args.power)
     refine_end = time.process_time()
     refine_time = refine_end - refine_start
 
@@ -246,6 +242,7 @@ def main():
     else:
         total_time = reduce_time + embed_time + refine_time
         time_info = [reduce_time, embed_time, refine_time, total_time]
+    print("%%%%%% Single CPU time %%%%%%")
     print("Graph Reduction  Time: {}".format(reduce_time))
     print("Graph Embedding  Time: {}".format(embed_time))
     print("Graph Refinement Time: {}".format(refine_time))
