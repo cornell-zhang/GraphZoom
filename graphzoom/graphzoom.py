@@ -112,7 +112,7 @@ def smooth_filter(laplacian_matrix, lda):
     degree = diags(d_inv_sqrt, 0)
     norm_adj = degree @ adj_matrix @ degree
     return norm_adj
-    
+
 def refinement(levels, projections, coarse_laplacian, embeddings, lda, power):
     for i in reversed(range(levels)):
         embeddings = (projections[i].transpose()) @ embeddings
@@ -138,7 +138,7 @@ def main():
     parser.add_argument("-w", "--sage_weighted", default=True, action="store_false", help="whether consider weighted reduced graph")
 
     args = parser.parse_args()
-    
+
     dataset = args.dataset
     mcr_dir = args.mcr_dir
     search_ratio = args.search_ratio
@@ -169,7 +169,7 @@ def main():
         laplacian = mmread(fusion_input_path)
     else:
         laplacian = json2mtx(dataset)
-    
+
     if args.fusion or args.embed_method == "graphsage":    ##whether feature is needed
         feature = np.load(feature_path)
 
@@ -212,7 +212,7 @@ def main():
         embed_start = time.process_time()
         embeddings = graphsage(G, feats, args.sage_model, args.sage_weighted, int(10000/args.reduce_ratio))
         embed_end = time.process_time()
-        
+
     embed_time = embed_end - embed_start
 
 ######Load Refinement Data######
@@ -235,6 +235,7 @@ def main():
     lr(eval_dataset, save_dir, dataset)
 
 ######Report timing information######
+    print("%%%%%% Single CPU time %%%%%%")
     if args.fusion:
         total_time = fusion_time + reduce_time + embed_time + refine_time
         time_info = [fusion_time, reduce_time, embed_time, refine_time, total_time]
@@ -242,7 +243,6 @@ def main():
     else:
         total_time = reduce_time + embed_time + refine_time
         time_info = [reduce_time, embed_time, refine_time, total_time]
-    print("%%%%%% Single CPU time %%%%%%")
     print("Graph Reduction  Time: {}".format(reduce_time))
     print("Graph Embedding  Time: {}".format(embed_time))
     print("Graph Refinement Time: {}".format(refine_time))

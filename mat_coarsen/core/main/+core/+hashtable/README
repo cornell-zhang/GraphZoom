@@ -1,0 +1,106 @@
+hashtable class for MATLAB: General purpose hashtable/hashset for MATLAB.
+
+Copyright (c) 2007, Christopher Painter-Wakefield.
+
+What it is:
+----------
+A general purpose hashtable that provides for use of almost any MATLAB type or 
+user defined class as keys or values. 
+
+
+Why bother?
+----------
+Really, I did this more as an exercise to learn more about MATLAB, although I 
+did hope to get a usable hashtable out of it.  Ultimately, what I ended up with
+seems to work correctly, and has the proper O(1) characteristics that one looks
+for in a hashtable implementation.  However, it is slower in almost every
+instance than alternative approaches (more on this under performance, below).
+
+So, about the only reason to use this class is if you want to use arbitrary
+keys that alternate methods don't allow, such as user defined class objects,
+matrices, etc.  You can supply your own custom equality and hashing functions
+as well, to customize the performance and behavior of the hashtable.
+
+One other contribution in this class is a general purpose equality testing
+function that does something reasonable for almost all MATLAB types (e.g.,
+structures are compared recursively on a field-by-field basis, etc.)
+
+
+Basic Usage:
+-----------
+Make sure the @hashtable directory is in your MATLAB path.  You can create
+a hashtable with default settings simply by
+    myTable = hashtable;
+
+You can also customize some typical hashtable settings and initial conditions:
+    myTable = hashtable('param_name', value, ...);
+
+Allowed parameters (see hashtable.m for more info): 
+    'size'   - initial size (number of slots)
+    'load'   - loading factor
+    'equals' - function handle of an equality function
+    'hash'   - function handle of hashing function
+    'grow'   - factor by which to grow the hashtable when needed
+
+Functions:
+    table = put(table, key, value);   - store a key/value pair
+    table = put(table, key);          - store just a key (to use as a Set)
+
+    value = get(table, key);          - retrieve a stored value by key
+
+    b     = has_key(table, key);      - test for key existence
+
+    n     = count(table);             - get number of stored keys
+
+    [k,v] = dump(table);              - get cell arrays of all keys and values
+  
+            info(table);              - print table statistics and info
+
+
+Testing and performance:
+-----------------------
+The directory hashtable_tests contains a testing script, hashtable_tests.m, 
+and a performance testing script, timing_tests.m.  You can run the testing
+script very quickly as a good way to verify there are no incompatibility
+problems etc.  It also shows some of the more exotic usage patterns.
+
+For performance testing, I evaluated this hashtable implementation against
+three alternative approaches: making a callout to Java to use the
+java.util.Hashtable object (string and double keys); using MATLAB structs with
+string keys only; and using a simple MATLAB vector together with linear search
+(the MATLAB find() function) as an index.
+
+As expected, this hashtable implementation performs lookups in constant time,
+while using linear search takes more time when the size of the table (vector,
+in this case) grows.  However, the find() method beat the hashtable on my 
+hardware until getting into table sizes of 20,000 or more (numerical keys).
+
+On some hardware the Java hashtable outperformed the new hashtable consistently,
+but on a shared server the behavior was very inconsistent (as seen in the 
+table below).
+
+Most surprising to me was that the struct lookup method was the fastest of all,
+beating out the Java hashtable consistently.  Furthermore, the struct lookup
+method appears to have O(1) lookup behavior; I was unable to find a test
+sufficiently large to increase the lookup time.  This approach is probably the
+best choice whenever keys are strings or can be translated uniquely and cheaply
+into strings.
+
+Below is a table of timing results run on the fastest hardware I have access to
+(Opteron 885, Linux kernel 2.6.18).  All results shown are cputime measures of
+the number of seconds required to perform lookups of 1000 randomly selected keys
+known to be in the table.
+
+Table size:             10      100     1000    10000   20000   30000   40000   50000
+
+Real keys:
+MATLAB Hashtable:       0.09    0.07    0.08    0.09    0.09    0.1     0.11    0.12
+optimized Hashtable:    0.08    0.07    0.06    0.07    0.08    0.09    0.1     0.09
+MATLAB find():          0       0.01    0.01    0.03    0.07    0.11    0.14    0.17
+Java Hashtable:         0.12    0.07    0.07    1.4     0.05    0.04    0.46    0.04
+
+String keys:
+MATLAB Hashtable:       0.26    0.26    0.27    0.26    0.26    0.26    0.28    0.28
+struct field lookup:    0.01    0.01    0       0       0       0.01    0       0.01
+Java Hashtable:         3       1.5     0.24    0.04    1.3     0.04    0.04    0.04
+

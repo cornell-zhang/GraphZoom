@@ -44,3 +44,6 @@ Usage
 **Full Command List**
     The full list of command line options is available with ``python graphzoom.py --help``
 
+**Coarsening Code**
+    The matlab version of spectral coarsening code is available in mat_coarsen/
+
