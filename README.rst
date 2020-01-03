@@ -12,7 +12,6 @@ Requirements
 * scipy
 * scikit-learn
 * gensim, only required by deepwalk, node2vec
-* theano, only required by netmf
 * tensorflow, only required by graphsage
 
 Installation
