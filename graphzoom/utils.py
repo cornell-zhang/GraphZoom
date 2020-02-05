@@ -6,11 +6,10 @@ from scipy.io import mmwrite
 from scipy.sparse import csr_matrix
 
 def json2mtx(dataset):
-    G_data = json.load(open("dataset/{}/{}-G.json".format(dataset, dataset)))
-    G = json_graph.node_link_graph(G_data)
-
+    G_data    = json.load(open("dataset/{}/{}-G.json".format(dataset, dataset)))
+    G         = json_graph.node_link_graph(G_data)
     laplacian = laplacian_matrix(G)
-    file = open("dataset/{}/{}.mtx".format(dataset, dataset), "wb") 
+    file = open("dataset/{}/{}.mtx".format(dataset, dataset), "wb")
     mmwrite("dataset/{}/{}.mtx".format(dataset, dataset), laplacian)
     file.close()
 
@@ -18,14 +17,14 @@ def json2mtx(dataset):
 
 def mtx2matrix(proj_name):
     data = []
-    row = []
-    col = []
+    row  = []
+    col  = []
     with open(proj_name) as ff:
         for i,line in enumerate(ff):
             info = line.split()
             if i == 0:
                 NumReducedNodes = int(info[0])
-                NumOriginNodes = int(info[1])
+                NumOriginNodes  = int(info[1])
             else:
                 row.append(int(info[0])-1)
                 col.append(int(info[1])-1)
@@ -43,7 +42,7 @@ def mtx2graph(mtx_path):
                 num_nodes = int(info[0])
             elif int(info[0]) < int(info[1]):
                 G.add_edge(int(info[0])-1, int(info[1])-1, wgt=abs(float(info[2])))
-
+    # add isolated nodes
     for i in range(num_nodes):
         G.add_node(i)
     return G
@@ -60,10 +59,10 @@ def read_time(cputime_path):
 
 def construct_proj_laplacian(laplacian, levels, proj_dir):
     coarse_laplacian = []
-    projections = []
+    projections      = []
     for i in range(levels):
         projection_name = "{}/Projection_{}.mtx".format(proj_dir, i+1)
-        projection = mtx2matrix(projection_name)
+        projection      = mtx2matrix(projection_name)
         projections.append(projection)
         coarse_laplacian.append(laplacian)
         if i != (levels-1):
