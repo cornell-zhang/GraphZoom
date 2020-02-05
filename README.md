@@ -22,7 +22,7 @@ Installation
 Usage
 -----
 
-**Note:** You have to pass the root directory of matlab compiler runtime to the argument "--mcr_dir" when running graphzoom.py
+**Note:** You have to pass the root directory of matlab compiler runtime to the argument "--mcr\_dir" when running graphzoom.py
 
 **Example Usage**
     ``cd graphzoom``
@@ -59,6 +59,6 @@ published in ICLR'20.
       booktitle={International Conference on Learning Representations},
       year={2020},
       url={https://openreview.net/forum?id=r1lGO0EKDH}
-}
+    }
 ```
 
