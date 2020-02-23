@@ -3,7 +3,7 @@ GraphZoom
 
 GraphZoom is a framework that aims to improve both performance and scalability of graph embedding techniques.
 
-![Overview of the GraphZoom framework](https://github.com/cornell-zhang/GraphZoom/GraphZoom.pdf)
+![Overview of the GraphZoom framework](https://github.com/cornell-zhang/GraphZoom/GraphZoom.png)
 
 Citation
 ------------
