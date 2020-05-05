@@ -20,9 +20,14 @@ url={https://openreview.net/forum?id=r1lGO0EKDH}
 }
 ```
 
+Spectral Coarsening Options
+------------
+* lamg-based coarsening: This is the spectral coarsening algorithm used in the original paper, but it requires you to download Matlab Compiler Runtime (MCR).
+* simple coarsening: This is a simpler spectral coarsening implemented via python and you do not need to download MCR. This algorithm adopts a similar idea to coarsen the graph, while the performance may drop a little bit compared to lamg-based coarsening.
+
 Requirements
 ------------
-* Matlab Compiler Runtime (MCR) 2018a(Linux), which is a standalone set of shared libraries that enables the execution of compiled MATLAB applications and does not require license to install.
+* Matlab Compiler Runtime (MCR) 2018a(Linux), which is a standalone set of shared libraries that enables the execution of compiled MATLAB applications and does not require license to install (only required if you run lamg-based coarsening).
 * numpy
 * networkx
 * scipy
@@ -32,7 +37,7 @@ Requirements
 
 Installation
 ------------
-1. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html)
+1. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html, only required if you run lamg-based coarsening)
 2. `pip install -r requirements.txt`
 
 Directory Stucture
@@ -69,13 +74,19 @@ GraphZoom/
 Usage
 -----
 
-**Note:** You have to pass the root directory of matlab compiler runtime to the argument`--mcr_dir` when running graphzoom.py
+**Note:** If you run lamg-based coarsening, you have to pass the root directory of matlab compiler runtime to the argument`--mcr_dir` when running graphzoom.py
 
 **Example Usage**
 
 1. `cd graphzoom`
 
-2. `python graphzoom.py --mcr_dir YOUR_MCR_ROOT_DIR --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk`
+2. `python graphzoom.py --mcr_dir YOUR_MCR_ROOT_DIR --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk --coarse lamg`
+
+**--coarse**:  *choose a specific algorithm for coarsening, [lamg, simple]*
+
+**--reduce_ratio**:  *the reduction ratio when choosing lamg-based coarsening method*
+
+**--level**:  *the coarsening level when choosing simple coarsening method*
 
 **--mcr_dir**:  *root directory of matlab compiler runtime*
 
@@ -113,7 +124,7 @@ You can add your own dataset following the json format in `graphzoom/dataset`
 Experimental Results
 -------
 
-Here we evaluate GraphZoom on Cora dataset with DeepWalk as basic embedding model. GraphZoom-i denotes applying GraphZoom with i-th coarsening level.
+Here we evaluate GraphZoom on Cora dataset with DeepWalk as basic embedding model, with lamg-based coarsening method. GraphZoom-i denotes applying GraphZoom with i-th coarsening level.
 
 | Method        | Accuracy      | Speedup  | Graph_Size  |
 | :-----------: |:-------------:| :-------:| :----------:|

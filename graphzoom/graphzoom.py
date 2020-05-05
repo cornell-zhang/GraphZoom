@@ -15,102 +15,36 @@ from embed_methods.node2vec.node2vec import *
 from utils import *
 from scoring import lr
 
-def cosine_similarity(x, y):
-    dot_xy = abs(np.dot(x, y))
-    norm_x = LA.norm(x)
-    norm_y = LA.norm(y)
-    if norm_x == 0 or norm_y == 0:
-        if norm_x == 0 and norm_y == 0:
-            similarity = 1
-        else:
-            similarity = 0
-    else:
-        similarity = dot_xy/(norm_x * norm_y)
-    return similarity
-
-def maximum (A, B):
-    # calculate max{A, B}
-    BisBigger = A-B
-    BisBigger.data = np.where(BisBigger.data < 0, 1, 0)
-    return A - A.multiply(BisBigger) + B.multiply(BisBigger)
-
-def feats2graph(feature, num_neighs, mapping):
-    fine_dim   = mapping.shape[1]   # number of nodes in fine graph
-    coarse_dim = mapping.shape[0]   # number of node in coarse graph
-    all_rows   = []
-    all_cols   = []
-    all_data   = []
-    for i in range(coarse_dim):
-        row  = []
-        col  = []
-        data = []
-        node_list = ((mapping[i,:].nonzero())[1]).tolist()
-        if len(node_list)-1 > num_neighs:
-            for j in node_list:
-                col_  = []
-                data_ = []
-                dist  = []
-                feat1 = feature[j, :]
-                for k in node_list:
-                    if j != k:
-                        feat2 = feature[k, :]
-                        dist.append(LA.norm(feat1-feat2))
-                        col_.append(k)
-                ids_sort = np.argsort(np.asarray(dist))
-                col_ind  = (np.asarray(col_)[ids_sort]).tolist()[:num_neighs]
-                for ind in col_ind:
-                    feat2 = feature[ind, :]
-                    data_.append(cosine_similarity(feat1, feat2))
-                row  += (np.repeat(j, num_neighs)).tolist()
-                col  += col_ind
-                data += data_
-        else:
-            for pair in permutations(node_list, 2):
-                feat1 = feature[pair[0], :]
-                feat2 = feature[pair[1], :]
-                row.append(pair[0])
-                col.append(pair[1])
-                data.append(cosine_similarity(feat1, feat2))
-        all_rows += row
-        all_cols += col
-        all_data += data
-
-    adj_initial      = csr_matrix((all_data, (all_rows, all_cols)), shape=(fine_dim, fine_dim))
-    adj_max          = maximum(triu(adj_initial), tril(adj_initial).transpose())
-    adj_final        = adj_max + adj_max.transpose()
-    degree_matrix    = diags(np.squeeze(np.asarray(adj_final.sum(axis=1))), 0)
-    laplacian_matrix = degree_matrix - adj_final
-
-    return laplacian_matrix
-
-
-def graph_fusion(laplacian, feature, num_neighs, mcr_dir, fusion_input_path, \
+def graph_fusion(laplacian, feature, num_neighs, mcr_dir, coarse, fusion_input_path, \
                  search_ratio, fusion_output_dir, mapping_path, dataset):
-    os.system('./run_coarsening.sh {} {} {} f {}'.format(mcr_dir, \
-             fusion_input_path, search_ratio, fusion_output_dir))
-    mapping         = mtx2matrix(mapping_path)
-    feats_laplacian = feats2graph(feature, num_neighs, mapping)
-    fused_laplacian = laplacian + feats_laplacian   # fuses adj_graph and feat_graph, beta=1
-    file = open("dataset/{}/fused_{}.mtx".format(dataset, dataset), "wb")
-    mmwrite("dataset/{}/fused_{}.mtx".format(dataset, dataset), fused_laplacian)
-    file.close()
-    print("Successfully Writing Fused Graph.mtx file!!!!!!")
-    return fused_laplacian
 
-def smooth_filter(laplacian_matrix, lda):
-    dim        = laplacian_matrix.shape[0]
-    adj_matrix = diags(laplacian_matrix.diagonal(), 0) - laplacian_matrix + lda * identity(dim)
-    degree_vec = adj_matrix.sum(axis=1)
-    with np.errstate(divide='ignore'):
-        d_inv_sqrt = np.squeeze(np.asarray(np.power(degree_vec, -0.5)))
-    d_inv_sqrt[np.isinf(d_inv_sqrt)|np.isnan(d_inv_sqrt)] = 0
-    degree_matrix  = diags(d_inv_sqrt, 0)
-    norm_adj       = degree_matrix @ adj_matrix @ degree_matrix
-    return norm_adj
+    # obtain mapping operator
+    if coarse == "simple":
+        mapping = sim_coarse_fusion(laplacian)
+    elif coarse == "lamg":
+        os.system('./run_coarsening.sh {} {} {} f {}'.format(mcr_dir, \
+                fusion_input_path, search_ratio, fusion_output_dir))
+        mapping = mtx2matrix(mapping_path)
+    else:
+        raise NotImplementedError
+
+    # construct feature graph
+    feats_laplacian = feats2graph(feature, num_neighs, mapping)
+
+    # fusion
+    fused_laplacian = laplacian + feats_laplacian   # fuses adj_graph and feat_graph, beta=1
+
+    if coarse == "lamg":
+        file = open("dataset/{}/fused_{}.mtx".format(dataset, dataset), "wb")
+        mmwrite("dataset/{}/fused_{}.mtx".format(dataset, dataset), fused_laplacian)
+        file.close()
+        print("Successfully Writing Fused Graph.mtx file!!!!!!")
+
+    return fused_laplacian
 
 def refinement(levels, projections, coarse_laplacian, embeddings, lda, power):
     for i in reversed(range(levels)):
-        embeddings = (projections[i].transpose()) @ embeddings
+        embeddings = projections[i] @ embeddings
         filter_    = smooth_filter(coarse_laplacian[i], lda)
         if power or i == 0:   # power controls whether smooth intermediate embeddings
             embeddings = filter_ @ (filter_ @ embeddings)
@@ -120,12 +54,16 @@ def main():
     parser = ArgumentParser(description="GraphZoom")
     parser.add_argument("-d", "--dataset", type=str, default="cora", \
             help="input dataset")
+    parser.add_argument("-o", "--coarse", type=str, default="simple", \
+            help="choose either simple_coarse or lamg_coarse, [simple, lamg]")
     parser.add_argument("-c", "--mcr_dir", type=str, default="/opt/matlab/R2018A/", \
-            help="directory of matlab compiler runtime")
+            help="directory of matlab compiler runtime (only required by lamg_coarsen)")
     parser.add_argument("-s", "--search_ratio", type=int, default=12, \
-            help="control the search space in graph fusion process")
+            help="control the search space in graph fusion process (only required by lamg_coarsen)")
     parser.add_argument("-r", "--reduce_ratio", type=int, default=2, \
-            help="control graph coarsening levels")
+            help="control graph coarsening levels (only required by lamg_coarsen)")
+    parser.add_argument("-v", "--level", type=int, default=1, \
+            help="number of coarsening levels (only required by simple_coarsen)")
     parser.add_argument("-n", "--num_neighs", type=int, default=2, \
             help="control k-nearest neighbors in graph fusion process")
     parser.add_argument("-l", "--lda", type=float, default=0.1, \
@@ -166,20 +104,31 @@ def main():
     if args.fusion:
         print("%%%%%% Starting Graph Fusion %%%%%%")
         fusion_start = time.process_time()
-        laplacian    = graph_fusion(laplacian, feature, args.num_neighs, args.mcr_dir, \
+        laplacian    = graph_fusion(laplacian, feature, args.num_neighs, args.mcr_dir, args.coarse,\
                        fusion_input_path, args.search_ratio, reduce_results, mapping_path, dataset)
         fusion_time  = time.process_time() - fusion_start
 
 ######Graph Reduction######
     print("%%%%%% Starting Graph Reduction %%%%%%")
-    os.system('./run_coarsening.sh {} {} {} n {}'.format(args.mcr_dir, \
-            coarsen_input_path, args.reduce_ratio, reduce_results))
-    reduce_time = read_time("{}CPUtime.txt".format(reduce_results))
+    reduce_start = time.process_time()
+
+    if args.coarse == "simple":
+        G, projections, laplacians, level = sim_coarse(laplacian, args.level)
+        reduce_time = time.process_time() - reduce_start
+
+    elif args.coarse == "lamg":
+        os.system('./run_coarsening.sh {} {} {} n {}'.format(args.mcr_dir, \
+                coarsen_input_path, args.reduce_ratio, reduce_results))
+        reduce_time = read_time("{}CPUtime.txt".format(reduce_results))
+        G = mtx2graph("{}Gs.mtx".format(reduce_results))
+        level = read_levels("{}NumLevels.txt".format(reduce_results))
+        projections, laplacians = construct_proj_laplacian(laplacian, level, reduce_results)
+
+    else:
+        raise NotImplementedError
 
 
 ######Embed Reduced Graph######
-    G = mtx2graph("{}Gs.mtx".format(reduce_results))
-
     print("%%%%%% Starting Graph Embedding %%%%%%")
     if args.embed_method == "deepwalk":
         embed_start = time.process_time()
@@ -193,21 +142,32 @@ def main():
         from embed_methods.graphsage.graphsage import graphsage
         nx.set_node_attributes(G, False, "test")
         nx.set_node_attributes(G, False, "val")
-        mapping     = normalize(mtx2matrix(mapping_path), norm='l1', axis=1)
-        feats       = mapping @ feature
+
+        # obtain mapping operator
+        if args.coarse == "lamg":
+            mapping = normalize(mtx2matrix(mapping_path), norm='l1', axis=1)
+        else:
+            mapping = identity(feature.shape[0])
+            for p in projections:
+                mapping = mapping @ p
+            mapping = normalize(mapping, norm='l1', axis=1).transpose()
+
+        # control iterations for training
+        coarse_ratio = mapping.shape[1]/mapping.shape[0]
+
+        # map node feats to the coarse graph
+        feats = mapping @ feature
+
         embed_start = time.process_time()
-        embeddings  = graphsage(G, feats, args.sage_model, args.sage_weighted, int(1000/args.reduce_ratio))
+        embeddings  = graphsage(G, feats, args.sage_model, args.sage_weighted, int(1000/coarse_ratio))
 
     embed_time = time.process_time() - embed_start
 
-######Load Refinement Data######
-    levels = read_levels("{}NumLevels.txt".format(reduce_results))
-    projections, coarse_laplacian = construct_proj_laplacian(laplacian, levels, reduce_results)
 
 ######Refinement######
     print("%%%%%% Starting Graph Refinement %%%%%%")
     refine_start = time.process_time()
-    embeddings   = refinement(levels, projections, coarse_laplacian, embeddings, args.lda, args.power)
+    embeddings   = refinement(level, projections, laplacians, embeddings, args.lda, args.power)
     refine_time  = time.process_time() - refine_start
 
 
@@ -219,7 +179,7 @@ def main():
     lr("dataset/{}/".format(dataset), args.embed_path, dataset)
 
 ######Report timing information######
-    print("%%%%%% Single CPU time %%%%%%")
+    print("%%%%%% CPU time %%%%%%")
     if args.fusion:
         total_time = fusion_time + reduce_time + embed_time + refine_time
         print("Graph Fusion     Time: {}".format(fusion_time))
