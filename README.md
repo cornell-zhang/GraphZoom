@@ -133,6 +133,6 @@ Here we evaluate GraphZoom on Cora dataset with DeepWalk as basic embedding mode
 | GraphZoom-2   | 77.3          | 6.3x     | 519         |
 | GraphZoom-3   | 75.1          | 40.8x    | 218         |
 
-Coarsening Code
+LAMG Coarsening Code
 ---------------
-The matlab version of spectral coarsening code is available in `graphzoom/mat_coarsen/`
+The matlab version of lamg-based spectral coarsening code is available in `graphzoom/mat_coarsen/`
