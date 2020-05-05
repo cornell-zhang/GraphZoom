@@ -1,10 +1,8 @@
 import numpy as np
 import networkx as nx
 import os
-from scipy.sparse import csr_matrix, triu, tril, diags, identity
-from scipy.io import mmwrite, mmread
-from itertools import permutations
-from numpy import linalg as LA
+from scipy.sparse import identity
+from scipy.io import mmwrite
 import sys
 from argparse import ArgumentParser
 from sklearn.preprocessing import normalize

@@ -6,7 +6,7 @@ from networkx.readwrite import json_graph
 from networkx.linalg.laplacianmatrix import laplacian_matrix
 from scipy.io import mmwrite
 from scipy.sparse import csr_matrix, diags, identity, triu, tril
-from itertools import permutations
+from itertools import combinations
 
 def cosine_similarity(x, y):
     dot_xy = abs(np.dot(x, y))
@@ -58,7 +58,7 @@ def feats2graph(feature, num_neighs, mapping):
                 col  += col_ind
                 data += data_
         else:
-            for pair in permutations(node_list, 2):
+            for pair in combinations(node_list, 2):
                 feat1 = feature[pair[0], :]
                 feat2 = feature[pair[1], :]
                 row.append(pair[0])
