@@ -23,7 +23,7 @@ url={https://openreview.net/forum?id=r1lGO0EKDH}
 Spectral Coarsening Options
 ------------
 * lamg-based coarsening: This is the spectral coarsening algorithm used in the original paper, but it requires you to download Matlab Compiler Runtime (MCR).
-* simple coarsening: This is a simpler spectral coarsening implemented via python and you do not need to download MCR. This algorithm adopts a similar idea to coarsen the graph, while the performance may drop a little bit compared to lamg-based coarsening.
+* simple coarsening: This is a simpler spectral coarsening implemented via python and you do not need to download MCR. This algorithm adopts a similar idea to coarsen the graph (spectrum-preserving), while it may compromise the performance compared to lamg-based coarsening (especially for run-time speedup).
 
 Requirements
 ------------
