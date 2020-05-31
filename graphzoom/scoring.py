@@ -6,7 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from networkx.readwrite import json_graph
 
 def run_regression(train_embeds, train_labels, test_embeds, test_labels):
-    log         = LogisticRegression(solver='liblinear', multi_class='ovr')
+    log         = LogisticRegression(solver='lbfgs', multi_class='auto')
     log.fit(train_embeds, train_labels)
     pred_labels = (log.predict(test_embeds)).tolist()
     acc         = accuracy_score(test_labels, pred_labels)

@@ -28,6 +28,7 @@ Spectral Coarsening Options
 Requirements
 ------------
 * Matlab Compiler Runtime (MCR) 2018a(Linux), which is a standalone set of shared libraries that enables the execution of compiled MATLAB applications and does not require license to install (only required if you run lamg-based coarsening).
+* python 3.5/3.6/3.7 (We suggest [Conda](https://docs.conda.io/projects/conda/en/latest/index.html) to manage package dependencies.)
 * numpy
 * networkx
 * scipy
@@ -37,8 +38,10 @@ Requirements
 
 Installation
 ------------
-1. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html, only required if you run lamg-based coarsening)
-2. `pip install -r requirements.txt`
+1. `conda create -n graphzoom python=3.6`
+2. `conda activate graphzoom` (Skip first 2 steps if you do not use Conda)
+3. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html, only required if you run lamg-based coarsening)
+4. `pip install -r requirements.txt`
 
 Directory Stucture
 ------------

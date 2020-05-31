@@ -29,8 +29,8 @@ def graph_fusion(laplacian, feature, num_neighs, mcr_dir, coarse, fusion_input_p
     # construct feature graph
     feats_laplacian = feats2graph(feature, num_neighs, mapping)
 
-    # fusion
-    fused_laplacian = laplacian + feats_laplacian   # fuses adj_graph and feat_graph, beta=1
+    # fuse adj_graph with feat_graph
+    fused_laplacian = laplacian + feats_laplacian
 
     if coarse == "lamg":
         file = open("dataset/{}/fused_{}.mtx".format(dataset, dataset), "wb")
@@ -44,7 +44,10 @@ def refinement(levels, projections, coarse_laplacian, embeddings, lda, power):
     for i in reversed(range(levels)):
         embeddings = projections[i] @ embeddings
         filter_    = smooth_filter(coarse_laplacian[i], lda)
-        if power or i == 0:   # power controls whether smooth intermediate embeddings
+
+        ## power controls whether smoothing intermediate embeddings,
+        ## preventing over-smoothing
+        if power or i == 0:
             embeddings = filter_ @ (filter_ @ embeddings)
     return embeddings
 
@@ -95,8 +98,10 @@ def main():
 ######Load Data######
     print("%%%%%% Loading Graph Data %%%%%%")
     laplacian = json2mtx(dataset)
-    if args.fusion or args.embed_method == "graphsage":    ##whether feature is needed
-        feature   = np.load(feature_path)
+
+    ## whether node features are required
+    if args.fusion or args.embed_method == "graphsage":
+        feature = np.load(feature_path)
 
 ######Graph Fusion######
     if args.fusion:
@@ -141,7 +146,7 @@ def main():
         nx.set_node_attributes(G, False, "test")
         nx.set_node_attributes(G, False, "val")
 
-        # obtain mapping operator
+        ## obtain mapping operator
         if args.coarse == "lamg":
             mapping = normalize(mtx2matrix(mapping_path), norm='l1', axis=1)
         else:
@@ -150,10 +155,10 @@ def main():
                 mapping = mapping @ p
             mapping = normalize(mapping, norm='l1', axis=1).transpose()
 
-        # control iterations for training
+        ## control iterations for training
         coarse_ratio = mapping.shape[1]/mapping.shape[0]
 
-        # map node feats to the coarse graph
+        ## map node feats to the coarse graph
         feats = mapping @ feature
 
         embed_start = time.process_time()
@@ -180,14 +185,14 @@ def main():
     print("%%%%%% CPU time %%%%%%")
     if args.fusion:
         total_time = fusion_time + reduce_time + embed_time + refine_time
-        print("Graph Fusion     Time: {}".format(fusion_time))
+        print(f"Graph Fusion     Time: {fusion_time:.3f}")
     else:
         total_time = reduce_time + embed_time + refine_time
         print("Graph Fusion     Time: 0")
-    print("Graph Reduction  Time: {}".format(reduce_time))
-    print("Graph Embedding  Time: {}".format(embed_time))
-    print("Graph Refinement Time: {}".format(refine_time))
-    print("Total Time = Fusion_time + Reduction_time + Embedding_time + Refinement_time = {}".format(total_time))
+    print(f"Graph Reduction  Time: {reduce_time:.3f}")
+    print(f"Graph Embedding  Time: {embed_time:.3f}")
+    print(f"Graph Refinement Time: {refine_time:.3f}")
+    print(f"Total Time = Fusion_time + Reduction_time + Embedding_time + Refinement_time = {total_time:.3f}")
 
 
 if __name__ == "__main__":

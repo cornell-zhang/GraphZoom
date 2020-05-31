@@ -22,14 +22,17 @@ def cosine_similarity(x, y):
     return similarity
 
 def maximum (A, B):
-    # calculate max{A, B}
+    ## calculate max{A, B}
     BisBigger = A-B
     BisBigger.data = np.where(BisBigger.data < 0, 1, 0)
     return A - A.multiply(BisBigger) + B.multiply(BisBigger)
 
 def feats2graph(feature, num_neighs, mapping):
-    fine_dim   = mapping.shape[1]   # number of nodes in fine graph
-    coarse_dim = mapping.shape[0]   # number of node in coarse graph
+    # number of nodes in fine graph
+    fine_dim   = mapping.shape[1]
+    # number of nodes in coarse graph
+    coarse_dim = mapping.shape[0]
+
     all_rows   = []
     all_cols   = []
     all_data   = []
@@ -79,7 +82,7 @@ def feats2graph(feature, num_neighs, mapping):
 def json2mtx(dataset):
     G_data    = json.load(open("dataset/{}/{}-G.json".format(dataset, dataset)))
     G         = json_graph.node_link_graph(G_data)
-    laplacian = laplacian_matrix(G)
+    laplacian = laplacian_matrix(G, nodelist=range(len(G.nodes)))
     file = open("dataset/{}/{}.mtx".format(dataset, dataset), "wb")
     mmwrite("dataset/{}/{}.mtx".format(dataset, dataset), laplacian)
     file.close()
@@ -113,7 +116,8 @@ def mtx2graph(mtx_path):
                 num_nodes = int(info[0])
             elif int(info[0]) < int(info[1]):
                 G.add_edge(int(info[0])-1, int(info[1])-1, wgt=abs(float(info[2])))
-    # add isolated nodes
+
+    ## add isolated nodes
     for i in range(num_nodes):
         G.add_node(i)
     return G
@@ -137,7 +141,7 @@ def construct_proj_laplacian(laplacian, levels, proj_dir):
         projections.append(projection.transpose())
         coarse_laplacian.append(laplacian)
         if i != (levels-1):
-            laplacian = projection @ laplacian @ (projection.transpose())
+            laplacian = projection @ (laplacian @ (projection.transpose()))
     return projections, coarse_laplacian
 
 def affinity(x, y):
@@ -154,28 +158,40 @@ def smooth_filter(laplacian_matrix, lda):
         d_inv_sqrt = np.squeeze(np.asarray(np.power(degree_vec, -0.5)))
     d_inv_sqrt[np.isinf(d_inv_sqrt)|np.isnan(d_inv_sqrt)] = 0
     degree_matrix  = diags(d_inv_sqrt, 0)
-    norm_adj       = degree_matrix @ adj_matrix @ degree_matrix
+    norm_adj       = degree_matrix @ (adj_matrix @ degree_matrix)
     return norm_adj
 
 def spec_coarsen(filter_, laplacian):
-    power = 2
     np.random.seed(seed=1)
+
+    ## power of low-pass filter
+    power = 2
+    ## number of testing vectors
     t = 7
+    ## threshold for merging nodes
+    thresh = 0.3
 
     adjacency = diags(laplacian.diagonal(), 0) - laplacian
     G = nx.from_scipy_sparse_matrix(adjacency)
     tv_list = []
     num_nodes = len(G.nodes())
-    for i in range(t):
+
+    ## generate testing vectors in [-1,1], 
+    ## and orthogonal to constant vector
+    for _ in range(t):
         tv = -1 + 2 * np.random.rand(num_nodes)
         tv -= np.ones(num_nodes)*np.sum(tv)/num_nodes
-        #print(np.sum(tv))
         tv_list.append(tv)
     tv_feat = np.transpose(np.asarray(tv_list))
-    for i in range(power):
+
+    ## smooth the testing vectors
+    for _ in range(power):
         tv_feat = filter_ @ tv_feat
     matched = [False] * num_nodes
     degree_map = [0] * num_nodes
+
+    ## hub nodes are more important than others,
+    ## treat hub nodes as seeds
     for (node, val) in G.degree():
         degree_map[node] = val
     sorted_idx = np.argsort(np.asarray(degree_map))
@@ -189,7 +205,7 @@ def spec_coarsen(filter_, laplacian):
         matched[idx] = True
         cluster = [idx]
         for n in G.neighbors(idx):
-            if affinity(tv_feat[idx], tv_feat[n]) > 0.3 and not matched[n]:
+            if affinity(tv_feat[idx], tv_feat[n]) > thresh and not matched[n]:
                 cluster.append(n)
                 matched[n] = True
         row += cluster
@@ -210,7 +226,7 @@ def sim_coarse(laplacian, level):
         projections.append(mapping)
 
         print("Coarsening Level:", i+1)
-        print("Num of nodes: ", laplacian.shape[0], "Num of edges: ", (laplacian.nnz - laplacian.shape[0])/2)
+        print("Num of nodes: ", laplacian.shape[0], "Num of edges: ", int((laplacian.nnz - laplacian.shape[0])/2))
 
     adjacency = diags(laplacian.diagonal(), 0) - laplacian
     G = nx.from_scipy_sparse_matrix(adjacency, edge_attribute='wgt')
@@ -219,7 +235,7 @@ def sim_coarse(laplacian, level):
 def sim_coarse_fusion(laplacian):
     level = 5
     mapping = identity(laplacian.shape[0])
-    for i in range(level):
+    for _ in range(level):
         filter_ = smooth_filter(laplacian, 0.1)
         laplacian, map_ = spec_coarsen(filter_, laplacian)
         mapping = mapping @ map_
