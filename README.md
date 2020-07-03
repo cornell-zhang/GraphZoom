@@ -35,6 +35,7 @@ Requirements
 * scikit-learn
 * gensim, only required by deepwalk, node2vec
 * tensorflow, only required by graphsage
+* torch, ogb, pytorch_geometric, only required by [Open Graph Benchmark (OGB)](https://ogb.stanford.edu/) examples
 
 Installation
 ------------
@@ -42,6 +43,7 @@ Installation
 2. `conda activate graphzoom` (Skip first 2 steps if you do not use Conda)
 3. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html, only required if you run lamg-based coarsening)
 4. `pip install -r requirements.txt`
+5. `install PyTorch and PyTorch Geometric` (https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html, only required if you run OGB examples)
 
 Directory Stucture
 ------------
@@ -71,6 +73,14 @@ GraphZoom/
 │   │   LamgSetup.m
 │   │   ...  
 │
+└───ogb/
+│   │   ...
+│   └───ogbn-arxiv/ 
+│        │   main.py
+│        │   mlp.py
+│        │   arxiv.sh   
+│        │   ...  
+│        
 ```
 
 
@@ -135,6 +145,13 @@ Here we evaluate GraphZoom on Cora dataset with DeepWalk as basic embedding mode
 | GraphZoom-1   | 76.9          | 2.5x     | 1169        |
 | GraphZoom-2   | 77.3          | 6.3x     | 519         |
 | GraphZoom-3   | 75.1          | 40.8x    | 218         |
+
+We also evaluate Graphzoom on [ogbn-arxiv](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv) dataset with lamg-based coarsening method, and GraphZoom-1 has better performance and much fewer parameters than the Node2Vec baseline.
+
+| Method        | Accuracy       | #Params   | 
+| :-----------: |:--------------:| :--------:| 
+| Node2Vec      | 70.07 ± 0.13   | 21,818,792| 
+| GraphZoom-1   | 71.18 ± 0.18   | 8,963,624 | 
 
 LAMG Coarsening Code
 ---------------
