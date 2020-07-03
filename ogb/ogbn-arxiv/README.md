@@ -18,3 +18,10 @@ python ogb_parser.py
 # Run with default config
 bash arxiv.sh YOUR_MCR_ROOT_DIR
 ```
+
+## Results
+GraphZoom-i denotes applying GraphZoom with i-th coarsening level, and the results of Node2Vec baseline are taken from the [OGB Leaderboard](https://ogb.stanford.edu/docs/leader_nodeprop/)
+| Method        | Accuracy       | #Params   | 
+| :-----------: |:--------------:| :--------:| 
+| Node2Vec      | 70.07 ± 0.13   | 21,818,792| 
+| GraphZoom-1   | 71.18 ± 0.18   | 8,963,624 | 

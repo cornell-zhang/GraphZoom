@@ -146,6 +146,13 @@ Here we evaluate GraphZoom on Cora dataset with DeepWalk as basic embedding mode
 | GraphZoom-2   | 77.3          | 6.3x     | 519         |
 | GraphZoom-3   | 75.1          | 40.8x    | 218         |
 
+We also evaluate Graphzoom on [ogbn-arxiv](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv) dataset with lamg-based coarsening method, and GraphZoom-1 has better performance and much fewer parameters than the Node2Vec baseline.
+
+| Method        | Accuracy       | #Params   | 
+| :-----------: |:--------------:| :--------:| 
+| Node2Vec      | 70.07 ± 0.13   | 21,818,792| 
+| GraphZoom-1   | 71.18 ± 0.18   | 8,963,624 | 
+
 LAMG Coarsening Code
 ---------------
 The matlab version of lamg-based spectral coarsening code is available in `graphzoom/mat_coarsen/`
