@@ -35,6 +35,7 @@ Requirements
 * scikit-learn
 * gensim, only required by deepwalk, node2vec
 * tensorflow, only required by graphsage
+* torch, ogb, pytorch_geometric, only required by [Open Graph Benchmark (OGB)](https://ogb.stanford.edu/) examples
 
 Installation
 ------------
@@ -42,6 +43,7 @@ Installation
 2. `conda activate graphzoom` (Skip first 2 steps if you do not use Conda)
 3. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html, only required if you run lamg-based coarsening)
 4. `pip install -r requirements.txt`
+5. `install PyTorch and PyTorch Geometric` (https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html, only required if you run OGB examples)
 
 Directory Stucture
 ------------
@@ -71,6 +73,14 @@ GraphZoom/
 │   │   LamgSetup.m
 │   │   ...  
 │
+└───ogb/
+│   │   ...
+│   └───ogbn-arxiv/ 
+│        │   main.py
+│        │   mlp.py
+│        │   arxiv.sh   
+│        │   ...  
+│        
 ```
 
 
