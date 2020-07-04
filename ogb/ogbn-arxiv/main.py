@@ -70,7 +70,7 @@ def main():
             help="control k-nearest neighbors in graph fusion process")
     parser.add_argument("-l", "--lda", type=float, default=0.1, \
             help="control self loop in adjacency matrix")
-    parser.add_argument("-e", "--embed_path", type=str, default="../embed_results/embeddings.npy", \
+    parser.add_argument("-e", "--embed_path", type=str, default="./embed_results/", \
             help="path of embedding result")
     parser.add_argument("-m", "--embed_method", type=str, default="node2vec", \
             help="graph embedding method")
@@ -90,6 +90,8 @@ def main():
     fusion_input_path = "dataset/{}/{}.mtx".format(dataset, dataset)
     reduce_results = "./reduction_results/"
     mapping_path = "{}Mapping.mtx".format(reduce_results)
+
+    os.makedirs(reduce_results, exist_ok=True)
 
     if args.fusion:
         coarsen_input_path = "dataset/{}/fused_{}.mtx".format(dataset, dataset)
@@ -151,7 +153,8 @@ def main():
 
 
 ######Save Embeddings######
-    np.save(args.embed_path, embeddings)
+    os.makedirs(args.embed_path, exist_ok=True)
+    np.save(args.embed_path + "embeddings.npy", embeddings)
 
 ######Report timing information######
     print("%%%%%% CPU time %%%%%%")

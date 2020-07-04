@@ -99,7 +99,7 @@ def main():
 
     x = data.x
     if args.use_node_embedding:
-        embedding = np.load('../embed_results/embeddings.npy')
+        embedding = np.load('./embed_results/embeddings.npy')
         embedding = torch.from_numpy(embedding).float()
         x = torch.cat([x, embedding], dim=-1)
     x = x.to(device)
