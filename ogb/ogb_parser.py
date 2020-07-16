@@ -1,11 +1,12 @@
-from ogb.nodeproppred import NodePropPredDataset
+from ogb.nodeproppred import NodePropPredDataset, PygNodePropPredDataset
+from ogb.linkproppred import LinkPropPredDataset, PygLinkPropPredDataset
 import networkx as nx
 from networkx.readwrite import json_graph
 import json
 import sys
 import numpy as np
-from ogb.nodeproppred import PygNodePropPredDataset
 from torch_geometric.utils import to_undirected
+import torch
 import tqdm
 import os
 from argparse import ArgumentParser
@@ -15,7 +16,7 @@ parser.add_argument("-f", "--save_feature", default=False, action="store_true",
         help="save graph feature")
 parser.add_argument("-l", "--save_label", default=False, action="store_true",
         help="save dataset labels")
-parser.add_argument("-d", "--dataset", type=str, default="ogbn-arxiv", 
+parser.add_argument("-d", "--dataset", type=str, default="ogbn-arxiv",
         help="input dataset name")
 
 args = parser.parse_args()
@@ -26,15 +27,17 @@ dataset_str = d_name.split("-")[1]
 if dataset_str == "arxiv":
     dataset = PygNodePropPredDataset(name=d_name, root=f"{d_name}/dataset")
     d = dataset[0]
+    edge_index = to_undirected(d.edge_index, d.num_nodes)
+    edgelist = (edge_index.data).cpu().numpy()
+    num_nodes = d.num_nodes
+elif dataset_str == "collab":
+    dataset = PygLinkPropPredDataset(name=d_name, root=f"{d_name}/dataset")
+    d = dataset[0]
     edge_index = d.edge_index
-    edge_index = to_undirected(edge_index, d.num_nodes)
     edgelist = (edge_index.data).cpu().numpy()
     num_nodes = d.num_nodes
 else:
     raise NotImplementedError
-
-split_idx = dataset.get_idx_split()
-train_idx, valid_idx, test_idx = split_idx["train"], split_idx["valid"], split_idx["test"]
 
 G = nx.Graph()
 os.makedirs(f"{d_name}/dataset/{dataset_str}/", exist_ok=True)
@@ -48,6 +51,8 @@ for i in range(edgelist.shape[1]):
 if args.save_label or args.save_feature:
     if dataset_str == "arxiv":
         graph, label = NodePropPredDataset(name = d_name, root=f"{d_name}/dataset")[0] # graph: library-agnostic graph object
+    elif dataset_str == "collab":
+        graph = LinkPropPredDataset(name = d_name, root=f"{d_name}/dataset")[0]
     else:
         raise NotImplementedError
     os.makedirs(f"{d_name}/dataset/{dataset_str}/", exist_ok=True)
@@ -61,6 +66,9 @@ if args.save_label:
             f.write('\"'+str(i)+"\": ")
             f.write(str(label[i][0]))
         f.write('}')
+
+    split_idx = dataset.get_idx_split()
+    train_idx, valid_idx, test_idx = split_idx["train"], split_idx["valid"], split_idx["test"]
 
     test = {}
     valid = {}
@@ -83,3 +91,4 @@ with open("{}/dataset/{}/{}-G.json".format(d_name, dataset_str, dataset_str), 'w
 
 if args.save_feature:
     np.save("{}/dataset/{}/{}-feats.npy".format(d_name, dataset_str, dataset_str), graph["node_feat"])
+
