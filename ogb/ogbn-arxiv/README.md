@@ -12,11 +12,8 @@ Follow the [installation guide](https://github.com/cornell-zhang/GraphZoom/blob/
 ## Training & Evaluation
 
 ```bash
-# Generate arxiv dataset
-cd .. && python ogb_parser.py -d ogbn-arxiv
-
 # Run with default config
-bash arxiv.sh YOUR_MCR_ROOT_DIR
+./arxiv.sh YOUR_MCR_ROOT_DIR
 ```
 
 ## Results

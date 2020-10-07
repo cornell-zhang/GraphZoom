@@ -58,7 +58,7 @@ def refinement(levels, projections, coarse_laplacian, embeddings, lda, power):
 
 def main():
     parser = ArgumentParser(description="GraphZoom")
-    parser.add_argument("-d", "--dataset", type=str, default="arxiv", \
+    parser.add_argument("-d", "--dataset", type=str, default="products", \
             help="input dataset")
     parser.add_argument("-o", "--coarse", type=str, default="lamg", \
             help="choose either simple_coarse or lamg_coarse, [simple, lamg]")
@@ -86,11 +86,12 @@ def main():
             help="aggregation function in graphsage")
     parser.add_argument("-w", "--sage_weighted", default=True, action="store_false", \
             help="whether consider weighted reduced graph")
+    parser.add_argument("--resume", default=False, action="store_true", \
+            help="whether to run embedding with stored coarsened graphs")
 
     args = parser.parse_args()
 
     dataset = args.dataset
-    feature_path = "dataset/{}/{}-feats.npy".format(dataset, dataset)
     fusion_input_path = "dataset/{}/{}.mtx".format(dataset, dataset)
     reduce_results = "./reduction_results/"
     mapping_path = "{}Mapping.mtx".format(reduce_results)
@@ -105,59 +106,83 @@ def main():
     else:
         coarsen_input_path = "dataset/{}/{}.mtx".format(dataset, dataset)
 
+    if not args.resume:
 ######Load Data######
-    print("%%%%%% Loading Graph Data %%%%%%")
-    lp_index, lp_weight = get_laplacian(to_undirected(d[0].edge_index, d[0].num_nodes))
-    laplacian = to_scipy_sparse_matrix(lp_index, lp_weight)
-    if args.coarse == "lamg":
-        if os.path.exists(fusion_input_path):
-            print("Laplacian matrix in mtx already exists.")
-        else:
-            print("Saving laplacian matrix in mtx...")
-            file = open(fusion_input_path, "wb")
-            mmwrite(fusion_input_path, laplacian)
-            file.close()
+        print("%%%%%% Loading Graph Data %%%%%%")
+        lp_index, lp_weight = get_laplacian(to_undirected(d[0].edge_index, d[0].num_nodes))
+        laplacian = to_scipy_sparse_matrix(lp_index, lp_weight)
+        if args.coarse == "lamg":
+            if os.path.exists(fusion_input_path):
+                print("Laplacian matrix in mtx already exists.")
+            else:
+                print("Saving laplacian matrix in mtx...")
+                file = open(fusion_input_path, "wb")
+                mmwrite(fusion_input_path, laplacian)
+                file.close()
 
-    ## whether node features are required
-    if args.fusion:
-        feature = d[0].x.numpy()
+        ## whether node features are required
+        if args.fusion:
+            feature = d[0].x.numpy()
 
 ######Graph Fusion######
-    if args.fusion:
-        print("%%%%%% Starting Graph Fusion %%%%%%")
-        fusion_start = time.process_time()
-        laplacian    = graph_fusion(laplacian, feature, args.num_neighs, args.mcr_dir, args.coarse,\
-                       fusion_input_path, args.search_ratio, reduce_results, mapping_path, dataset)
-        fusion_time  = time.process_time() - fusion_start
+        if args.fusion:
+            print("%%%%%% Starting Graph Fusion %%%%%%")
+            fusion_start = time.process_time()
+            laplacian    = graph_fusion(laplacian, feature, args.num_neighs, args.mcr_dir, args.coarse,\
+                        fusion_input_path, args.search_ratio, reduce_results, mapping_path, dataset)
+            fusion_time  = time.process_time() - fusion_start
 
 ######Graph Reduction######
-    print("%%%%%% Starting Graph Reduction %%%%%%")
-    reduce_start = time.process_time()
+        print("%%%%%% Starting Graph Reduction %%%%%%")
+        reduce_start = time.process_time()
 
-    if args.coarse == "simple":
-        G, projections, laplacians, level = sim_coarse(laplacian, args.level)
-        reduce_time = time.process_time() - reduce_start
+        if args.coarse == "simple":
+            G, projections, laplacians, level = sim_coarse(laplacian, args.level)
+            reduce_time = time.process_time() - reduce_start
 
-    elif args.coarse == "lamg":
-        os.system('./run_coarsening.sh {} {} {} n {}'.format(args.mcr_dir, \
-                coarsen_input_path, args.reduce_ratio, reduce_results))
-        reduce_time = read_time("{}CPUtime.txt".format(reduce_results))
-        G = mtx2graph("{}Gs.mtx".format(reduce_results))
-        level = read_levels("{}NumLevels.txt".format(reduce_results))
-        projections, laplacians = construct_proj_laplacian(laplacian, level, reduce_results)
+        elif args.coarse == "lamg":
+            os.system('./run_coarsening.sh {} {} {} n {}'.format(args.mcr_dir, \
+                    coarsen_input_path, args.reduce_ratio, reduce_results))
+            reduce_time = read_time("{}CPUtime.txt".format(reduce_results))
+            G = mtx2graph("{}Gs.mtx".format(reduce_results))
+            level = read_levels("{}NumLevels.txt".format(reduce_results))
+            projections, laplacians = construct_proj_laplacian(laplacian, level, reduce_results)
 
+        else:
+            raise NotImplementedError
+
+        edge_index = torch.tensor(list(G.edges)).t().contiguous().view(2, -1)
+        edge_index = to_undirected(edge_index, len(G.nodes()))
+
+        ######Save Coarsened Graph Info######
+        if args.coarse == "lamg":
+            l = args.reduce_ratio
+        else:
+            l = args.level
+        np.save(f'dataset/{dataset}/projections_{l}.npy', projections)
+        np.save(f'dataset/{dataset}/laplacians_{l}.npy', laplacians)
+        torch.save(edge_index, f"dataset/{dataset}/edge_index_coarsened_{l}.pt")
+        level_map = {"level": level}
+        torch.save(level_map, f"dataset/{dataset}/level_map_{l}.pt")
     else:
-        raise NotImplementedError
-
-    edge_index = torch.tensor(list(G.edges)).t().contiguous().view(2, -1)
-    edge_index = to_undirected(edge_index, len(G.nodes()))
+        ######Load Coarsened Graph Info######
+        print("Loading saved coarsened graph info...")
+        if args.coarse == "lamg":
+            l = args.reduce_ratio
+        else:
+            l = args.level
+        projections = np.load(f'dataset/{dataset}/projections_{l}.npy', allow_pickle=True)
+        laplacians = np.load(f'dataset/{dataset}/laplacians_{l}.npy', allow_pickle=True)
+        edge_index = torch.load(f"dataset/{dataset}/edge_index_coarsened_{l}.pt")
+        level_map = torch.load(f"dataset/{dataset}/level_map_{l}.pt")
+        level = level_map['level']
 
 
 ######Embed Reduced Graph######
     print("%%%%%% Starting Graph Embedding %%%%%%")
     if args.embed_method == "node2vec":
         embed_start = time.process_time()
-        embeddings  = node2vec(edge_index)
+        embeddings, total_params = node2vec(edge_index)
     else:
         raise NotImplementedError
 
@@ -177,6 +202,9 @@ def main():
 
 ######Report timing information######
     print("%%%%%% CPU time %%%%%%")
+    if args.resume:
+        fusion_time = 0
+        reduce_time = 0
     if args.fusion:
         total_time = fusion_time + reduce_time + embed_time + refine_time
         print(f"Graph Fusion     Time: {fusion_time:.3f}")
