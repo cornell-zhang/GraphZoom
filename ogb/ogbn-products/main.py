@@ -58,7 +58,7 @@ def refinement(levels, projections, coarse_laplacian, embeddings, lda, power):
 
 def main():
     parser = ArgumentParser(description="GraphZoom")
-    parser.add_argument("-d", "--dataset", type=str, default="arxiv", \
+    parser.add_argument("-d", "--dataset", type=str, default="products", \
             help="input dataset")
     parser.add_argument("-o", "--coarse", type=str, default="lamg", \
             help="choose either simple_coarse or lamg_coarse, [simple, lamg]")
