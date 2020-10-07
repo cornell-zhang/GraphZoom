@@ -8,7 +8,7 @@ from torch_geometric.nn import Node2Vec
 from torch_geometric.utils import to_undirected
 
 
-def node2vec(G):
+def node2vec(edge_index):
     embedding_dim = 128
     walk_length = 80
     context_size = 20
@@ -20,19 +20,6 @@ def node2vec(G):
 
     device = f'cuda:{0}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
-
-    num_nodes = len(G.nodes())
-    num_edges = len(G.edges())
-    edge_index = np.zeros((2, num_edges))
-    cnt = 0
-    for e in G.edges():
-        edge_index[0][cnt] = int(e[0])
-        edge_index[1][cnt] = int(e[1])
-        cnt += 1
-    print("Finished edge_index!!!!!!")
-    edge_index = torch.from_numpy(edge_index).long().to(device)
-    edge_index = to_undirected(edge_index, num_nodes)
-
 
     model = Node2Vec(edge_index, embedding_dim, walk_length,
                      context_size, walks_per_node, sparse=True).to(device)

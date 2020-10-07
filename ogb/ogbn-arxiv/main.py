@@ -9,6 +9,10 @@ from sklearn.preprocessing import normalize
 import time
 
 from node2vec import *
+from networkx.linalg.laplacianmatrix import laplacian_matrix
+from torch_geometric.utils import to_undirected, get_laplacian
+from torch_geometric.utils.convert import to_scipy_sparse_matrix
+from ogb.nodeproppred import PygNodePropPredDataset
 
 import sys
 sys.path.append("../..")
@@ -91,7 +95,10 @@ def main():
     reduce_results = "./reduction_results/"
     mapping_path = "{}Mapping.mtx".format(reduce_results)
 
+    d = PygNodePropPredDataset(name=f"ogbn-{dataset}")
+
     os.makedirs(reduce_results, exist_ok=True)
+    os.makedirs(f"dataset/{dataset}", exist_ok=True)
 
     if args.fusion:
         coarsen_input_path = "dataset/{}/fused_{}.mtx".format(dataset, dataset)
@@ -100,11 +107,20 @@ def main():
 
 ######Load Data######
     print("%%%%%% Loading Graph Data %%%%%%")
-    laplacian = json2mtx(dataset)
+    lp_index, lp_weight = get_laplacian(to_undirected(d[0].edge_index, d[0].num_nodes))
+    laplacian = to_scipy_sparse_matrix(lp_index, lp_weight)
+    if args.coarse == "lamg":
+        if os.path.exists(fusion_input_path):
+            print("Laplacian matrix in mtx already exists.")
+        else:
+            print("Saving laplacian matrix in mtx...")
+            file = open(fusion_input_path, "wb")
+            mmwrite(fusion_input_path, laplacian)
+            file.close()
 
     ## whether node features are required
-    if args.fusion or args.embed_method == "graphsage":
-        feature = np.load(feature_path)
+    if args.fusion:
+        feature = d[0].x.numpy()
 
 ######Graph Fusion######
     if args.fusion:
@@ -133,12 +149,15 @@ def main():
     else:
         raise NotImplementedError
 
+    edge_index = torch.tensor(list(G.edges)).t().contiguous().view(2, -1)
+    edge_index = to_undirected(edge_index, len(G.nodes()))
+
 
 ######Embed Reduced Graph######
     print("%%%%%% Starting Graph Embedding %%%%%%")
     if args.embed_method == "node2vec":
         embed_start = time.process_time()
-        embeddings  = node2vec(G)
+        embeddings  = node2vec(edge_index)
     else:
         raise NotImplementedError
 

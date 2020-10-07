@@ -76,11 +76,17 @@ GraphZoom/
 └───ogb/
 │   │   ...
 │   └───ogbn-arxiv/ 
+│   │    │   main.py
+│   │    │   mlp.py
+│   │    │   arxiv.sh   
+│   │    │   ...  
+│   │    
+│   └───ogbn-products/ 
 │        │   main.py
 │        │   mlp.py
-│        │   arxiv.sh   
-│        │   ...  
-│        
+│        │   products.sh  
+│        │   ...
+│
 ```
 
 
@@ -146,12 +152,20 @@ Here we evaluate GraphZoom on Cora dataset with DeepWalk as basic embedding mode
 | GraphZoom-2   | 77.3          | 6.3x     | 519         |
 | GraphZoom-3   | 75.1          | 40.8x    | 218         |
 
-We also evaluate Graphzoom on [ogbn-arxiv](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv) dataset with lamg-based coarsening method, and GraphZoom-1 has better performance and much fewer parameters than the Node2vec baseline.
+We also evaluate Graphzoom on [ogbn-arxiv](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv) and [ogbn-products](https://ogb.stanford.edu/docs/nodeprop/#ogbn-products) dataset with lamg-based coarsening method, and GraphZoom-1 has better performance and much fewer parameters than the Node2vec baseline.
+
+**ogbn-arxiv**
 
 | Method        | Accuracy       | #Params   | 
 | :-----------: |:--------------:| :--------:| 
 | Node2vec      | 70.07 ± 0.13   | 21,818,792| 
 | GraphZoom-1   | 71.18 ± 0.18   | 8,963,624 | 
+
+**ogbn-products**
+| Method        | Accuracy       | #Params     | 
+| :-----------: |:--------------:| :----------:| 
+| Node2vec      | 72.49 ± 0.10   | 313,612,207 | 
+| GraphZoom-1   | 74.06 ± 0.26   | 120,251,183 |
 
 LAMG Coarsening Code
 ---------------

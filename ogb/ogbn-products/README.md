@@ -13,7 +13,7 @@ Follow the [installation guide](https://github.com/cornell-zhang/GraphZoom/blob/
 
 ```bash
 # Run with default config
-bash products.sh YOUR_MCR_ROOT_DIR
+./products.sh YOUR_MCR_ROOT_DIR
 ```
 
 ## Results
