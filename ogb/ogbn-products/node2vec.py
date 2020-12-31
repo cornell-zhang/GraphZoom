@@ -23,7 +23,7 @@ def node2vec(edge_index):
 
     loader = model.loader(batch_size=batch_size, shuffle=True,
                           num_workers=4)
-    optimizer = torch.optim.SparseAdam(model.parameters(), lr=lr)
+    optimizer = torch.optim.SparseAdam(list(model.parameters()), lr=lr)
 
     model.train()
     for epoch in range(1, epochs + 1):

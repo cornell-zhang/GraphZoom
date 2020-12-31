@@ -24,7 +24,7 @@ def node2vec(edge_index):
     model = Node2Vec(edge_index, embedding_dim, walk_length,
                      context_size, walks_per_node, sparse=True).to(device)
 
-    optimizer = torch.optim.SparseAdam(model.parameters(), lr=lr)
+    optimizer = torch.optim.SparseAdam(list(model.parameters()), lr=lr)
     loader = model.loader(batch_size=batch_size, shuffle=True, num_workers=4)
 
     model.train()
@@ -38,7 +38,7 @@ def node2vec(edge_index):
             if (i + 1) % log_steps == 0:
                 print(f'Epoch: {epoch:02d}, Step: {i+1:03d}/{len(loader)}, '
                       f'Loss: {loss:.4f}')
-    
+
     print(f'node2vec total params are {sum(p.numel() for p in model.parameters())}')
     return model.embedding.weight.data.cpu().numpy()
 
