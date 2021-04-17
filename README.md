@@ -39,11 +39,11 @@ Requirements
 
 Installation
 ------------
-1. `conda create -n graphzoom python=3.6`
-2. `conda activate graphzoom` (Skip first 2 steps if you do not use Conda)
-3. `install matlab compiler runtime 2018a(Linux)` (https://www.mathworks.com/products/compiler/matlab-runtime.html, only required if you run lamg-based coarsening)
-4. `pip install -r requirements.txt`
-5. `install PyTorch and PyTorch Geometric` (https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html, only required if you run OGB examples)
+1. install [matlab compiler runtime 2018a(Linux)](https://www.mathworks.com/products/compiler/matlab-runtime.html) (only required if you run lamg-based coarsening)
+2. install [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) (only required if you run OGB examples)
+3. `conda create -n graphzoom python=3.6`
+4. `conda activate graphzoom`
+5. `pip install -r requirements.txt`
 
 Directory Stucture
 ------------
