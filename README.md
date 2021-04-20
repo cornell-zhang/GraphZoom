@@ -40,16 +40,22 @@ Requirements
 Installation
 ------------
 1. install [matlab compiler runtime 2018a(Linux)](https://www.mathworks.com/products/compiler/matlab-runtime.html) (only required if you run lamg-based coarsening)
-   * `wget https://ssd.mathworks.com/supportfiles/downloads/R2018a/deployment_files/R2018a/installers/glnxa64/MCR_R2018a_glnxa64_installer.zip`
-   * `unzip MCR_R2018a_glnxa64_installer.zip -d YOUR_SAVE_PATH`
-   * `cd YOUR_SAVE_PATH`
-   * `./install -mode silent -agreeToLicense yes -destinationFolder YOUR_MCR_PATH`
+```
+wget https://ssd.mathworks.com/supportfiles/downloads/R2018a/deployment_files/R2018a/installers/glnxa64/MCR_R2018a_glnxa64_installer.zip`
+unzip MCR_R2018a_glnxa64_installer.zip -d YOUR_SAVE_PATH
+cd YOUR_SAVE_PATH
+./install -mode silent -agreeToLicense yes -destinationFolder YOUR_MCR_PATH
+```
 2. install [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) (only required if you run OGB examples)
 3. create virtual environment (skip if you do not want)
-   * `conda create -n graphzoom python=3.6`
-   * `conda activate graphzoom`
+```
+conda create -n graphzoom python=3.6
+conda activate graphzoom
+```
 4. install packages for graphzoom 
-   * `pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 Directory Stucture
 ------------
