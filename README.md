@@ -40,10 +40,16 @@ Requirements
 Installation
 ------------
 1. install [matlab compiler runtime 2018a(Linux)](https://www.mathworks.com/products/compiler/matlab-runtime.html) (only required if you run lamg-based coarsening)
+   `wget https://ssd.mathworks.com/supportfiles/downloads/R2018a/deployment_files/R2018a/installers/glnxa64/MCR_R2018a_glnxa64_installer.zip`
+   `unzip MCR_R2018a_glnxa64_installer.zip -d YOUR_SAVE_PATH`
+   `cd YOUR_SAVE_PATH`
+   `./install -mode silent -agreeToLicense yes -destinationFolder YOUR_MCR_PATH`
 2. install [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) (only required if you run OGB examples)
-3. `conda create -n graphzoom python=3.6`
-4. `conda activate graphzoom`
-5. `pip install -r requirements.txt`
+3. create virtual environment (skip if you do not want)
+   `conda create -n graphzoom python=3.6`
+   `conda activate graphzoom`
+4. install packages for graphzoom 
+   `pip install -r requirements.txt`
 
 Directory Stucture
 ------------
@@ -99,7 +105,7 @@ Usage
 
 1. `cd graphzoom`
 
-2. `python graphzoom.py --mcr_dir YOUR_MCR_ROOT_DIR --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk --coarse lamg`
+2. `python graphzoom.py --mcr_dir YOUR_MCR_PATH --dataset citeseer --search_ratio 12 --num_neighs 10 --embed_method deepwalk --coarse lamg`
 
 **--coarse**:  *choose a specific algorithm for coarsening, [lamg, simple]*
 
