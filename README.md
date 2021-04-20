@@ -181,4 +181,4 @@ We also evaluate Graphzoom on [ogbn-arxiv](https://ogb.stanford.edu/docs/nodepro
 
 LAMG Coarsening Code
 ---------------
-The matlab version of lamg-based spectral coarsening code is available in `graphzoom/mat_coarsen/`
+The matlab version of lamg-based spectral coarsening code is available in `mat_coarsen/`
